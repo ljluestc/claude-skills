@@ -1,0 +1,1113 @@
+openapi: 3.1.0
+info:
+  title: NetDiag Incident Diagnosis API
+  version: 1.0.0
+  description: |
+    Multi-tenant API for incident management, AI-assisted diagnosis sessions,
+    tool execution approvals, runbook management, and audit retrieval.
+servers:
+  - url: https://api.netdiag.io/api/v1
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+tags:
+  - name: incidents
+  - name: sessions
+  - name: tool-executions
+  - name: runbooks
+  - name: audit
+
+paths:
+  /incidents:
+    post:
+      tags: [incidents]
+      summary: Create incident
+      operationId: createIncident
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentCreateRequest'
+      responses:
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+    get:
+      tags: [incidents]
+      summary: List incidents
+      operationId: listIncidents
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/IncidentStatus'
+        - name: severity
+          in: query
+          schema:
+            $ref: '#/components/schemas/IncidentSeverity'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentListResponse'
+        '401':
+          $ref: '#/components/responses/Problem'
+
+  /incidents/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [incidents]
+      summary: Get incident
+      operationId: getIncident
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+    patch:
+      tags: [incidents]
+      summary: Update incident
+      operationId: patchIncident
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentPatchRequest'
+      responses:
+        '200':
+          description: Updated
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+    delete:
+      tags: [incidents]
+      summary: Soft-delete incident
+      operationId: deleteIncident
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /incidents/webhooks/{provider}:
+    post:
+      tags: [incidents]
+      summary: Receive incident webhook
+      operationId: receiveWebhook
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [pagerduty, opsgenie, servicenow, alertmanager]
+        - $ref: '#/components/parameters/WebhookSignature'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /incidents/{incident_id}/sessions:
+    post:
+      tags: [sessions]
+      summary: Start diagnostic session
+      operationId: createSession
+      parameters:
+        - name: incident_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /sessions/{session_id}/query:
+    post:
+      tags: [sessions]
+      summary: Submit diagnosis query (SSE stream)
+      operationId: querySession
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE frames containing turn lifecycle, chunks, evidence, proposed tools, and completion.
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+
+  /sessions/{session_id}/turns:
+    get:
+      tags: [sessions]
+      summary: List query turns
+      operationId: listTurns
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryTurnListResponse'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /sessions/{session_id}:
+    delete:
+      tags: [sessions]
+      summary: End session
+      operationId: deleteSession
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /sessions/{session_id}/tool-executions:
+    get:
+      tags: [tool-executions]
+      summary: List tool executions in session
+      operationId: listToolExecutions
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolExecutionListResponse'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /tool-executions/{id}/result:
+    get:
+      tags: [tool-executions]
+      summary: Get tool execution result
+      operationId: getToolExecutionResult
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolExecutionResult'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /tool-executions/{id}/approve:
+    post:
+      tags: [tool-executions]
+      summary: Approve tool execution
+      operationId: approveToolExecution
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        '202':
+          description: Approval accepted
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+
+  /tool-executions/{id}/reject:
+    post:
+      tags: [tool-executions]
+      summary: Reject tool execution
+      operationId: rejectToolExecution
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectRequest'
+      responses:
+        '202':
+          description: Rejection accepted
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+
+  /runbooks:
+    post:
+      tags: [runbooks]
+      summary: Create runbook
+      operationId: createRunbook
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunbookCreateRequest'
+      responses:
+        '201':
+          description: Created
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runbook'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+    get:
+      tags: [runbooks]
+      summary: List runbooks
+      operationId: listRunbooks
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: team
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunbookListResponse'
+        '401':
+          $ref: '#/components/responses/Problem'
+
+  /runbooks/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [runbooks]
+      summary: Get runbook
+      operationId: getRunbook
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runbook'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+    put:
+      tags: [runbooks]
+      summary: Update runbook (creates new version)
+      operationId: putRunbook
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunbookUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runbook'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+    delete:
+      tags: [runbooks]
+      summary: Soft-delete runbook
+      operationId: deleteRunbook
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /runbooks/sync:
+    post:
+      tags: [runbooks]
+      summary: Trigger git sync
+      operationId: syncRunbooks
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunbookSyncRequest'
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+
+  /runbooks/{id}/chunks:
+    get:
+      tags: [runbooks]
+      summary: List indexed chunks for runbook
+      operationId: listRunbookChunks
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunbookChunkListResponse'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+
+  /audit/events:
+    get:
+      tags: [audit]
+      summary: Query audit events
+      operationId: listAuditEvents
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: resource_type
+          in: query
+          schema:
+            type: string
+        - name: resource_id
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventListResponse'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+
+  /audit/events/export:
+    get:
+      tags: [audit]
+      summary: Export audit events
+      operationId: exportAuditEvents
+      parameters:
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [csv, parquet]
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditExportResponse'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Sort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        description: field:direction, e.g. created_at:desc
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    WebhookSignature:
+      name: X-NetDiag-Signature
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+
+  headers:
+    ETag:
+      description: Entity tag for optimistic concurrency control.
+      schema:
+        type: string
+    XRateLimitLimit:
+      schema:
+        type: integer
+    XRateLimitRemaining:
+      schema:
+        type: integer
+    XRateLimitReset:
+      schema:
+        type: integer
+        description: Unix timestamp reset time.
+
+  responses:
+    Problem:
+      description: Error response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    IncidentSeverity:
+      type: string
+      enum: [P1, P2, P3, P4, P5]
+    IncidentStatus:
+      type: string
+      enum: [open, triaging, diagnosing, mitigating, resolved, postmortem]
+    ToolTier:
+      type: integer
+      enum: [0, 1, 2]
+
+    Incident:
+      type: object
+      required: [id, severity, status, title, metadata, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        severity:
+          $ref: '#/components/schemas/IncidentSeverity'
+        status:
+          $ref: '#/components/schemas/IncidentStatus'
+        title:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    IncidentCreateRequest:
+      type: object
+      required: [severity, title, metadata]
+      properties:
+        severity:
+          $ref: '#/components/schemas/IncidentSeverity'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        metadata:
+          type: object
+          additionalProperties: true
+
+    IncidentPatchRequest:
+      type: object
+      properties:
+        severity:
+          $ref: '#/components/schemas/IncidentSeverity'
+        status:
+          $ref: '#/components/schemas/IncidentStatus'
+        notes:
+          type: string
+          maxLength: 4000
+      additionalProperties: false
+
+    Session:
+      type: object
+      required: [id, incident_id, user_id, created_at]
+      properties:
+        id:
+          type: string
+        incident_id:
+          type: string
+        user_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    QueryRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    QueryTurn:
+      type: object
+      required: [id, session_id, turn_number, user_query, ai_response, citations, created_at]
+      properties:
+        id:
+          type: string
+        session_id:
+          type: string
+        turn_number:
+          type: integer
+          minimum: 1
+        user_query:
+          type: string
+        ai_response:
+          type: object
+          additionalProperties: true
+        citations:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+    ToolExecution:
+      type: object
+      required: [id, turn_id, tool, params, tier, status, created_at]
+      properties:
+        id:
+          type: string
+        turn_id:
+          type: string
+        tool:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+        tier:
+          $ref: '#/components/schemas/ToolTier'
+        status:
+          type: string
+          enum: [pending, approved, executing, completed, failed, rejected, timed_out]
+        duration_ms:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+
+    ToolExecutionResult:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        output:
+          type: string
+        duration_ms:
+          type: integer
+          minimum: 0
+
+    RejectRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+
+    Runbook:
+      type: object
+      required: [id, title, tags, team, version, content_markdown, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        team:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        content_markdown:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RunbookCreateRequest:
+      type: object
+      required: [title, tags, team, content_markdown]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        tags:
+          type: array
+          minItems: 0
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 50
+        team:
+          type: string
+          minLength: 1
+          maxLength: 100
+        content_markdown:
+          type: string
+          minLength: 1
+
+    RunbookUpdateRequest:
+      type: object
+      required: [title, tags, team, content_markdown]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        tags:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 50
+        team:
+          type: string
+          minLength: 1
+          maxLength: 100
+        content_markdown:
+          type: string
+          minLength: 1
+
+    RunbookSyncRequest:
+      type: object
+      required: [repo_url, branch]
+      properties:
+        repo_url:
+          type: string
+          format: uri
+        branch:
+          type: string
+          minLength: 1
+
+    RunbookChunk:
+      type: object
+      required: [id, runbook_id, chunk_index, chunk_text]
+      properties:
+        id:
+          type: string
+        runbook_id:
+          type: string
+        chunk_index:
+          type: integer
+          minimum: 0
+        chunk_text:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    AuditEvent:
+      type: object
+      required: [id, actor_id, action, resource_type, resource_id, metadata, created_at]
+      properties:
+        id:
+          type: string
+        actor_id:
+          type: string
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        ip:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    AuditExportResponse:
+      type: object
+      required: [download_url]
+      properties:
+        download_url:
+          type: string
+          format: uri
+
+    PageIncident:
+      type: object
+      required: [items, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Incident'
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    IncidentListResponse:
+      $ref: '#/components/schemas/PageIncident'
+
+    QueryTurnListResponse:
+      type: object
+      required: [items, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryTurn'
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    ToolExecutionListResponse:
+      type: object
+      required: [items, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolExecution'
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    RunbookListResponse:
+      type: object
+      required: [items, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Runbook'
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    RunbookChunkListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunbookChunk'
+
+    AuditEventListResponse:
+      type: object
+      required: [items, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    ProblemDetails:
+      type: object
+      required: [type, title, status, detail, instance]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        trace_id:
+          type: string
+        error_code:
+          type: string
+        retryable:
+          type: boolean
+        invalid_params:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              reason:
+                type: string

@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NetDiagOutput",
+  "description": "Schema for the structured output of the network incident diagnosis prompt.",
+  "type": "object",
+  "required": [
+    "root_cause",
+    "confidence",
+    "evidence",
+    "suggested_actions",
+    "unsupported_hypotheses",
+    "missing_data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "root_cause": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Concise causal statement, or the literal string 'unknown'."
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["doc_id", "quote", "telemetry_ref", "relevance"],
+        "additionalProperties": false,
+        "properties": {
+          "doc_id": { "type": "string", "minLength": 1 },
+          "quote": { "type": "string", "minLength": 1 },
+          "telemetry_ref": { "type": ["string", "null"] },
+          "relevance": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "suggested_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "rationale", "impact", "requires_approval", "rollback"],
+        "additionalProperties": false,
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "rationale": { "type": "string", "minLength": 1 },
+          "impact": { "type": "string", "enum": ["safe", "disruptive"] },
+          "requires_approval": { "type": "boolean" },
+          "rollback": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "unsupported_hypotheses": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "missing_data": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

@@ -1,0 +1,240 @@
+# Eval test cases for the network incident diagnosis validator.
+#
+# Each case provides:
+#   - retrieved_docs: simulated RAG context.
+#   - telemetry_ids:  signals exposed to the model.
+#   - output:         a candidate JSON output from the LLM.
+#   - expected.valid: whether the validator should accept it.
+#   - expected.violation_substrings: required substrings in the violations
+#     (only relevant when expected.valid == false).
+#
+# All identifiers, IPs, and AS numbers are synthetic.
+
+cases:
+  # ----------------------------------------------------------------------
+  - name: happy_path_high_confidence
+    retrieved_docs:
+      - doc_id: RB-204
+        content: |
+          Runbook RB-204: BGP hold-timer expiry on flapping uplinks.
+          interface error rate >10k/min on a BGP-bearing link causes hold-timer
+          expiry within ~3 min, manifesting as session_down before any link-down
+          event.
+      - doc_id: PM-2025-031
+        content: |
+          Postmortem 2025-031: AS64512 degradation March 2025.
+          root cause was eth3 SFP degradation producing CRC errors and
+          consequent BGP flaps.
+    telemetry_ids: ["s1", "s2"]
+    output:
+      root_cause: "BGP session to peer 10.0.0.5 dropped due to hold-timer expiry caused by sustained errors on eth3."
+      confidence: high
+      evidence:
+        - doc_id: RB-204
+          quote: "interface error rate >10k/min on a BGP-bearing link causes hold-timer"
+          telemetry_ref: s2
+          relevance: "Telemetry shows error rate matching documented threshold."
+        - doc_id: PM-2025-031
+          quote: "root cause was eth3 SFP degradation producing CRC errors and"
+          telemetry_ref: s1
+          relevance: "Prior postmortem on eth3 establishes a known failure mode."
+      suggested_actions:
+        - action: "Pull eth3 optical diagnostics and compare to baseline."
+          rationale: "PM-2025-031 attributes flaps to SFP degradation; cheap to confirm."
+          impact: safe
+          requires_approval: false
+          rollback: null
+        - action: "Shift traffic off eth3 and replace SFP."
+          rationale: "RB-204 prescribes interface remediation when error rate persists."
+          impact: disruptive
+          requires_approval: true
+          rollback: "Revert local-pref; reseat original SFP."
+      unsupported_hypotheses: []
+      missing_data: []
+    expected:
+      valid: true
+      violation_substrings: []
+
+  # ----------------------------------------------------------------------
+  - name: hallucinated_doc_id
+    retrieved_docs:
+      - doc_id: RB-204
+        content: "BGP hold-timer expiry runbook content here."
+    telemetry_ids: ["s1"]
+    output:
+      root_cause: "BGP flap"
+      confidence: medium
+      evidence:
+        - doc_id: RB-999
+          quote: "BGP hold-timer expiry runbook content here."
+          telemetry_ref: s1
+          relevance: "Cited a doc not in retrieved context."
+      suggested_actions:
+        - action: "Investigate eth3 errors per s1."
+          rationale: "Telemetry s1 indicates errors on the BGP-bearing link."
+          impact: safe
+          requires_approval: false
+          rollback: null
+      unsupported_hypotheses: []
+      missing_data: ["Optical DOM readings"]
+    expected:
+      valid: false
+      violation_substrings:
+        - "hallucinated doc_id 'RB-999'"
+
+  # ----------------------------------------------------------------------
+  - name: missing_evidence_quote
+    retrieved_docs:
+      - doc_id: RB-204
+        content: "Real runbook content about BGP hold-timer expiry."
+    telemetry_ids: ["s1"]
+    output:
+      root_cause: "BGP flap"
+      confidence: medium
+      evidence:
+        - doc_id: RB-204
+          quote: "This sentence is not in the document."
+          telemetry_ref: s1
+          relevance: "Quote does not actually appear in the cited doc."
+      suggested_actions:
+        - action: "Investigate eth3 per s1."
+          rationale: "Telemetry s1 indicates errors on the BGP-bearing link."
+          impact: safe
+          requires_approval: false
+          rollback: null
+      unsupported_hypotheses: []
+      missing_data: ["Optical DOM readings"]
+    expected:
+      valid: false
+      violation_substrings:
+        - "quote not found verbatim in doc 'RB-204'"
+
+  # ----------------------------------------------------------------------
+  - name: unsafe_disruptive_action
+    retrieved_docs:
+      - doc_id: RB-204
+        content: "BGP hold-timer runbook. interface error rate >10k/min causes flaps."
+      - doc_id: PM-2025-031
+        content: "AS64512 postmortem: SFP degradation on eth3."
+    telemetry_ids: ["s1"]
+    output:
+      root_cause: "BGP flap from eth3 SFP degradation"
+      confidence: high
+      evidence:
+        - doc_id: RB-204
+          quote: "interface error rate >10k/min causes flaps"
+          telemetry_ref: s1
+          relevance: "Matches known threshold."
+        - doc_id: PM-2025-031
+          quote: "SFP degradation on eth3"
+          telemetry_ref: s1
+          relevance: "Prior postmortem ties same interface to same failure."
+      suggested_actions:
+        - action: "Reboot the core router immediately."
+          rationale: "PM-2025-031 references eth3 degradation."
+          impact: disruptive
+          requires_approval: false
+          rollback: null
+      unsupported_hypotheses: []
+      missing_data: []
+    expected:
+      valid: false
+      violation_substrings:
+        - "is disruptive but requires_approval=false"
+
+  # ----------------------------------------------------------------------
+  - name: low_confidence_without_missing_data
+    retrieved_docs:
+      - doc_id: RB-110
+        content: "Triage runbook: perceived slowness has many causes."
+    telemetry_ids: ["s1"]
+    output:
+      root_cause: "unknown"
+      confidence: low
+      evidence:
+        - doc_id: RB-110
+          quote: "perceived slowness has many causes"
+          telemetry_ref: s1
+          relevance: "Symptom matches generic guidance, no specific cause."
+      suggested_actions:
+        - action: "Run traceroute and DNS timing tests per RB-110."
+          rationale: "RB-110 mandates layer isolation before naming a cause."
+          impact: safe
+          requires_approval: false
+          rollback: null
+      unsupported_hypotheses: ["Wi-Fi contention"]
+      missing_data: []
+    expected:
+      valid: false
+      violation_substrings:
+        - "confidence='low' requires non-empty missing_data"
+
+  # ----------------------------------------------------------------------
+  - name: conflicting_evidence_medium_confidence
+    retrieved_docs:
+      - doc_id: KB-IPSEC-7
+        content: |
+          IKEv2 rekey storms guidance.
+          rekey failures at >10/5min usually indicate clock skew or PSK/cert
+          mismatch.
+      - doc_id: RB-CAP-3
+        content: |
+          WAN saturation runbook.
+          sustained >95% WAN utilization causes drops that can manifest as
+          control-plane protocol failures, including IPsec rekey timeouts.
+    telemetry_ids: ["s1", "s2"]
+    output:
+      root_cause: "Likely WAN saturation causing control-plane drops manifesting as IPsec rekey failures."
+      confidence: medium
+      evidence:
+        - doc_id: RB-CAP-3
+          quote: "sustained >95% WAN utilization causes drops that can manifest as"
+          telemetry_ref: s2
+          relevance: "Telemetry s2 shows 97% WAN utilization."
+        - doc_id: KB-IPSEC-7
+          quote: "rekey failures at >10/5min usually indicate clock skew or PSK/cert"
+          telemetry_ref: s1
+          relevance: "Alternative cause that must be ruled out."
+      suggested_actions:
+        - action: "Check NTP offset and certificate validity on tunnel endpoints."
+          rationale: "KB-IPSEC-7 lists clock or credential issues at this rate."
+          impact: safe
+          requires_approval: false
+          rollback: null
+        - action: "Sample top talkers on the WAN interface."
+          rationale: "RB-CAP-3 ties saturation to control-plane failures; identifies source."
+          impact: safe
+          requires_approval: false
+          rollback: null
+      unsupported_hypotheses: ["Provider MPLS issue"]
+      missing_data: ["NTP offset readings", "WAN flow data"]
+    expected:
+      valid: true
+      violation_substrings: []
+
+  # ----------------------------------------------------------------------
+  - name: high_confidence_single_doc_id_should_fail_calibration
+    retrieved_docs:
+      - doc_id: RB-204
+        content: "BGP hold-timer runbook. interface error rate >10k/min causes flaps."
+    telemetry_ids: ["s1"]
+    output:
+      root_cause: "BGP flap"
+      confidence: high
+      evidence:
+        - doc_id: RB-204
+          quote: "interface error rate >10k/min causes flaps"
+          telemetry_ref: s1
+          relevance: "Matches threshold."
+      suggested_actions:
+        - action: "Inspect eth3 per RB-204."
+          rationale: "RB-204 prescribes interface inspection."
+          impact: safe
+          requires_approval: false
+          rollback: null
+      unsupported_hypotheses: []
+      missing_data: []
+    expected:
+      valid: false
+      violation_substrings:
+        - "confidence='high' requires evidence from >=2 distinct doc_ids"

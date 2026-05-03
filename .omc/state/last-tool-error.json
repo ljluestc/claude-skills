@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls /home/calelin/dev/claude-skills/docs 2>/dev/null | head -20; echo \\\"---\\\"; ls /home/calelin/dev/claude-skills/docs/api 2>/dev/null; echo \\\"---adr---\\\"; ls /home/calelin/dev/claude-skill...",
+  "error": "Exit code 2\nagents\nai-incident-diagnosis\ncommands\ncustom-gpts.md\ngetting-started.md\ngooglec3db22c96191d971.html\nguides\nindex.md\nintegrations.md\norchestration.md\noverrides\npersonas\nplugins\nrobots.txt\nskills\nstylesheets\n---\n---adr---\n---openapi---",
+  "timestamp": "2026-05-03T22:31:23.958Z",
+  "retry_count": 1
+}

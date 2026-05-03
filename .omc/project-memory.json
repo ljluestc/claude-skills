@@ -1,0 +1,383 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777838958898,
+  "projectRoot": "/home/calelin/dev/claude-skills",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "scripts",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "agents": {
+      "path": "agents",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777838958893,
+      "keyFiles": [
+        "CLAUDE.md"
+      ]
+    },
+    "business-growth": {
+      "path": "business-growth",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1777838958895,
+      "keyFiles": [
+        "CLAUDE.md",
+        "SKILL.md"
+      ]
+    },
+    "c-level-advisor": {
+      "path": "c-level-advisor",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1777838958895,
+      "keyFiles": [
+        "CLAUDE.md",
+        "README.md",
+        "SKILL.md",
+        "c_level_leadership_skills_overview.md",
+        "ceo-advisor.zip"
+      ]
+    },
+    "commands": {
+      "path": "commands",
+      "purpose": null,
+      "fileCount": 30,
+      "lastAccessed": 1777838958895,
+      "keyFiles": [
+        "a11y-audit.md",
+        "changelog.md",
+        "code-to-prd.md",
+        "competitive-matrix.md",
+        "financial-health.md"
+      ]
+    },
+    "custom-gpt": {
+      "path": "custom-gpt",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777838958896,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 7,
+      "lastAccessed": 1777838958896,
+      "keyFiles": [
+        "custom-gpts.md",
+        "getting-started.md",
+        "googlec3db22c96191d971.html",
+        "index.md",
+        "integrations.md"
+      ]
+    },
+    "documentation": {
+      "path": "documentation",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1777838958896,
+      "keyFiles": [
+        "GIST_CONTENT.md",
+        "GROWTH_STRATEGY.md",
+        "PYTHON_TOOLS_AUDIT.md",
+        "TEST_COVERAGE_ANALYSIS.md",
+        "WORKFLOW.md"
+      ]
+    },
+    "engineering": {
+      "path": "engineering",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777838958896,
+      "keyFiles": [
+        "SKILL.md"
+      ]
+    },
+    "engineering-team": {
+      "path": "engineering-team",
+      "purpose": null,
+      "fileCount": 23,
+      "lastAccessed": 1777838958896,
+      "keyFiles": [
+        "CLAUDE.md",
+        "README.md",
+        "SKILL.md",
+        "START_HERE.md",
+        "TEAM_STRUCTURE_GUIDE.md"
+      ]
+    },
+    "eval-workspace": {
+      "path": "eval-workspace",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1777838958896,
+      "keyFiles": []
+    },
+    "finance": {
+      "path": "finance",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1777838958896,
+      "keyFiles": [
+        "CLAUDE.md",
+        "SKILL.md"
+      ]
+    },
+    "marketing-skill": {
+      "path": "marketing-skill",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "CLAUDE.md",
+        "MARKETING-EXECUTION-PLAN.md",
+        "MARKETING-EXPANSION-PLAN.md",
+        "README.md",
+        "SKILL.md"
+      ]
+    },
+    "orchestration": {
+      "path": "orchestration",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "ORCHESTRATION.md"
+      ]
+    },
+    "product-team": {
+      "path": "product-team",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "CLAUDE.md",
+        "README.md",
+        "SKILL.md"
+      ]
+    },
+    "project-management": {
+      "path": "project-management",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "CLAUDE.md",
+        "IMPLEMENTATION_SUMMARY.md",
+        "INSTALLATION_GUIDE.txt",
+        "README.md",
+        "REAL_WORLD_SCENARIO.md"
+      ]
+    },
+    "ra-qm-team": {
+      "path": "ra-qm-team",
+      "purpose": null,
+      "fileCount": 16,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "CLAUDE.md",
+        "README.md",
+        "SKILL.md",
+        "capa-officer.zip",
+        "fda-consultant-specialist.zip"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 11,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "codex-install.bat",
+        "codex-install.sh",
+        "convert.sh",
+        "gemini-install.sh",
+        "generate-docs.py"
+      ]
+    },
+    "standards": {
+      "path": "standards",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "CLAUDE.md"
+      ]
+    },
+    "templates": {
+      "path": "templates",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "CLAUDE.md",
+        "agent-template.md"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 14,
+      "lastAccessed": 1777838958897,
+      "keyFiles": [
+        "__init__.py",
+        "conftest.py",
+        "test_campaign_roi.py",
+        "test_commit_linter.py",
+        "test_dcf_valuation.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "evals/incident_diagnosis/schema.json",
+      "accessCount": 1,
+      "lastAccessed": 1777849498940,
+      "type": "file"
+    },
+    {
+      "path": "docs/api/01-api-overview.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849535953,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/01-overview.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849550958,
+      "type": "file"
+    },
+    {
+      "path": "evals/incident_diagnosis/validator.py",
+      "accessCount": 1,
+      "lastAccessed": 1777849567774,
+      "type": "file"
+    },
+    {
+      "path": "docs/api/02-versioning-idempotency.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849602847,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/02-high-level-architecture.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849633078,
+      "type": "file"
+    },
+    {
+      "path": "evals/incident_diagnosis/test_cases.yaml",
+      "accessCount": 1,
+      "lastAccessed": 1777849671889,
+      "type": "file"
+    },
+    {
+      "path": "docs/api/03-error-model-rfc7807.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849683088,
+      "type": "file"
+    },
+    {
+      "path": "evals/incident_diagnosis/test_validator.py",
+      "accessCount": 1,
+      "lastAccessed": 1777849711530,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/03-ingestion-pipeline.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849728669,
+      "type": "file"
+    },
+    {
+      "path": "evals/incident_diagnosis/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849781851,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/04-hybrid-retrieval.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849816193,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/05-agent-orchestration.md",
+      "accessCount": 1,
+      "lastAccessed": 1777849916428,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/06-tool-execution-and-opa.md",
+      "accessCount": 1,
+      "lastAccessed": 1777850004641,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/07-observability-and-slos.md",
+      "accessCount": 1,
+      "lastAccessed": 1777850092447,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/08-reliability-and-degradation.md",
+      "accessCount": 1,
+      "lastAccessed": 1777850192800,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/09-multi-region-deployment.md",
+      "accessCount": 1,
+      "lastAccessed": 1777850292580,
+      "type": "file"
+    },
+    {
+      "path": "docs/ai-incident-platform/10-architecture-decisions.md",
+      "accessCount": 1,
+      "lastAccessed": 1777850470108,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
